@@ -35,6 +35,8 @@ class DBHandler:
         self.strings['add_switching'] = "INSERT INTO switching VALUES(?,?,?)"
         self.strings['select_all'] = "SELECT name, extern_ip, extern_port," \
                                      "intern_ip, intern_port from routers, switching"
+        self.strings['select_routers'] = "SELECT name, extern_ip from routers"
+        self.strings['select_switching'] = "SELECT extern_port, intern_ip, intern_port from switching"
 
     def add_router(self, name, ext_ip):
         try:
@@ -55,6 +57,7 @@ class DBHandler:
             res = err.__str__()
         return res
 
+    # For working with SSH. To be changed
     def get_info(self):
         res = []
         cur = self.conn.cursor()
@@ -62,6 +65,26 @@ class DBHandler:
         for line in cur.fetchall():
             (name, eip, ep, ip, p) = line
             res.append((name, eip, int(ep), ip, int(p)))
+        return res
+
+    # For web table of routers
+    def get_routers(self):
+        res = []
+        cur = self.conn.cursor()
+        cur.execute(self.strings['select_routers'])
+        for line in cur.fetchall():
+            (name, eip) = line
+            res.append((name, eip))
+        return res
+
+    # For web table of switching rules
+    def get_switching(self):
+        res = []
+        cur = self.conn.cursor()
+        cur.execute(self.strings['select_switching'])
+        for line in cur.fetchall():
+            (ep, ip, p) = line
+            res.append((int(ep), ip, int(p)))
         return res
 
     def __del__(self):
