@@ -2,9 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Main page</title>
+    <script src={{ url_for('static', filename='jquery.js') }}></script>
+    <script src={{ url_for('static', filename='scripts.js') }}></script>
+    <link rel="stylesheet" type="text/css" href={{ url_for('static', filename='style.css') }}>
 </head>
 <body>
-
+    {% for msg in get_flashed_messages() %}
+        <p>{{ msg }}</p>
+    {% endfor %}
+    <table border="0">
+        <tr>
+            <td>
+                 <table class="main_table" border="1">
+                    {% for row in routers %}
+                        <tr>
+                            <td>{{ row.name }}</td>
+                            <td>{{ row.ext_ip }}</td>
+                            <td><input type="submit" value="Edit" onclick=
+                                    'relocate("{{ url_for('redirect_edit_router', name=row.name) }}")'/></td>
+                        </tr>
+                    {% endfor %}
+                        <tr>
+                            <td colspan="3">
+                                    <form action="{{ url_for('add_router') }}" method="post">
+                                        <p>Hostname <input type="text" name="name"/></p>                                      <p/>
+                                        <p>Address <input type="text" name="ip"/></p>
+                                        <p><input type="submit" value="Commit"/></p>
+                                    </form>
+                            </td>
+                        </tr>
+                 </table>
+            </td>
+            <td width="30px"></td>
+            <td>
+                <table class="main_table" border="1">
+                    {% for row in switching %}
+                        <tr>
+                            <td>{{ row.ext_p }}</td>
+                            <td>{{ row.ip }}</td>
+                            <td>{{ row.int_p }}</td>
+                            <td><input type="submit" value="Edit" onclick=
+                                    'relocate("{{ url_for('redirect_edit_switching', port=row.ext_p) }}")'/></td>
+                        </tr>
+                    {% endfor %}
+                        <tr>
+                            <td colspan="3">
+                                    <form action="{{ url_for('add_switching') }}" method="post">
+                                        <p>External port <input type="text" name="ext_p"/></p>                                      <p/>
+                                        <p>IP address <input type="text" name="ip"/></p>
+                                        <p>Internal port <input type="text" name="int_p"/></p>
+                                        <p><input type="submit" value="Commit"/></p>
+                                    </form>
+                            </td>
+                        </tr>
+                 </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

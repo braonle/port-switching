@@ -33,10 +33,14 @@ class DBHandler:
         self.conn = sqlite3.connect(database=self.parser.get(section="DATABASE", option="database"))
         self.strings['add_router'] = "INSERT INTO routers VALUES(?,?)"
         self.strings['add_switching'] = "INSERT INTO switching VALUES(?,?,?)"
-        self.strings['select_all'] = "SELECT name, extern_ip, extern_port," \
-                                     "intern_ip, intern_port from routers, switching"
         self.strings['select_routers'] = "SELECT name, extern_ip from routers"
-        self.strings['select_switching'] = "SELECT extern_port, intern_ip, intern_port from switching"
+        self.strings['select_router'] = "SELECT name, extern_ip from routers WHERE name = ?"
+        self.strings['select_switchings'] = "SELECT extern_port, intern_ip, intern_port from switching"
+        self.strings['select_switching'] = "SELECT extern_port, intern_ip, intern_port from switching WHERE " \
+                                           "extern_port = ?"
+        self.strings['edit_router'] = "UPDATE routers SET name = ?, extern_ip = ? WHERE name = ?"
+        self.strings['edit_switching'] = "UPDATE switching SET extern_port = ?, intern_ip = ?," \
+                                         "intern_port = ? WHERE extern_port = ?"
 
     def add_router(self, name, ext_ip):
         try:
@@ -57,16 +61,6 @@ class DBHandler:
             res = err.__str__()
         return res
 
-    # For working with SSH. To be changed
-    def get_info(self):
-        res = []
-        cur = self.conn.cursor()
-        cur.execute(self.strings['select_all'])
-        for line in cur.fetchall():
-            (name, eip, ep, ip, p) = line
-            res.append((name, eip, int(ep), ip, int(p)))
-        return res
-
     # For web table of routers
     def get_routers(self):
         res = []
@@ -78,13 +72,46 @@ class DBHandler:
         return res
 
     # For web table of switching rules
-    def get_switching(self):
+    def get_switchings(self):
         res = []
         cur = self.conn.cursor()
-        cur.execute(self.strings['select_switching'])
+        cur.execute(self.strings['select_switchings'])
         for line in cur.fetchall():
             (ep, ip, p) = line
             res.append((int(ep), ip, int(p)))
+        return res
+
+    def get_router(self, router):
+        cur = self.conn.cursor()
+        cur.execute(self.strings['select_router'], (router,))
+        (name, eip) = cur.fetchone()
+        return name, eip
+
+    def get_switching(self, port):
+        cur = self.conn.cursor()
+        cur.execute(self.strings['select_switching'], (port,))
+        (ep, ip, p) = cur.fetchone()
+        return ep, ip, p
+
+    def edit_router(self, router, ip, name):
+        cur = self.conn.cursor()
+        try:
+            cur.execute(self.strings['edit_router'], (name, ip, router))
+            self.conn.commit()
+            res = "{router} -> {name} : {ip} changed".format(router=router, name=name, ip=ip)
+        except sqlite3.IntegrityError as err:
+            res = err.__str__()
+        return res
+
+    def edit_switching(self, port, new_ep, ip, new_p):
+        cur = self.conn.cursor()
+        try:
+            cur.execute(self.strings['edit_switching'], (new_ep, ip, new_p, port))
+            self.conn.commit()
+            res = "{port} -> {new_ep} into {ip}:{new_p}".format(
+                port=port, new_ep=new_ep, ip=ip, new_p=new_p)
+        except sqlite3.IntegrityError as err:
+            res = err.__str__()
         return res
 
     def __del__(self):

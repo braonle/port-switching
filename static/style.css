@@ -1,3 +1,5 @@
-#routers {
-    border-width: 8px;
+.main_table
+{
+    border-width: 0px;
+    border-collapse: collapse;
 }
