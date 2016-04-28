@@ -11,6 +11,8 @@
     {% for msg in get_flashed_messages() %}
         <p>{{ msg }}</p>
     {% endfor %}
+    <p><a href="{{ url_for('add_router_red')}}">Add router</a></p>
+    <p><a href="{{ url_for('add_switching_red')}}">Add switching rule</a></p>
     <table border="0">
         <tr>
             <td>
@@ -21,20 +23,14 @@
                             <td>{{ row.ext_ip }}</td>
                             <td><input type="submit" value="Edit" onclick=
                                     'relocate("{{ url_for('redirect_edit_router', name=row.name) }}")'/></td>
+                            <td><input type="submit" value="Send" onclick=
+                                    'relocate("{{ url_for('ssh_send', router=row.name) }}")'/></td>
+                            <td><input type="submit" value="Delete" onclick=
+                                    'relocate("{{ url_for('delete_router', router=row.name) }}")'/></td>
                         </tr>
                     {% endfor %}
-                        <tr>
-                            <td colspan="3">
-                                    <form action="{{ url_for('add_router') }}" method="post">
-                                        <p>Hostname <input type="text" name="name"/></p>                                      <p/>
-                                        <p>Address <input type="text" name="ip"/></p>
-                                        <p><input type="submit" value="Commit"/></p>
-                                    </form>
-                            </td>
-                        </tr>
                  </table>
             </td>
-            <td width="30px"></td>
             <td>
                 <table class="main_table" border="1">
                     {% for row in switching %}
@@ -44,18 +40,10 @@
                             <td>{{ row.int_p }}</td>
                             <td><input type="submit" value="Edit" onclick=
                                     'relocate("{{ url_for('redirect_edit_switching', port=row.ext_p) }}")'/></td>
+                            <td><input type="submit" value="Delete" onclick=
+                                    'relocate("{{ url_for('delete_switching', port=row.ext_p) }}")'/></td>
                         </tr>
                     {% endfor %}
-                        <tr>
-                            <td colspan="3">
-                                    <form action="{{ url_for('add_switching') }}" method="post">
-                                        <p>External port <input type="text" name="ext_p"/></p>                                      <p/>
-                                        <p>IP address <input type="text" name="ip"/></p>
-                                        <p>Internal port <input type="text" name="int_p"/></p>
-                                        <p><input type="submit" value="Commit"/></p>
-                                    </form>
-                            </td>
-                        </tr>
                  </table>
             </td>
         </tr>

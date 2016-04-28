@@ -1,13 +1,20 @@
 from flask import Flask, render_template, request, redirect, url_for, g, flash
 from database import DBHandler
-import re
+import re, paramiko
+from configparser import ConfigParser
+
+# DEB: /etc/default/iptables
+# RPM: /etc/sysconfig/iptables
 
 app = Flask(__name__)
 app.config.from_pyfile('flask.conf')
 regexpip = "^(((25[1-5])|(2[1-4][0-9])|([0-1]?[0-9]{1,2}))\.){3,3}\
 ((25[1-5])|(2[1-4][0-9])|([0-1]?[0-9]{1,2}))$"
-
-
+parser = ConfigParser()
+parser.read(filenames='settings.conf')
+ssh_port = parser.getint(section="SSH", option="port")
+path = parser.get(section="SSH", option="path")
+intf = parser.get(section="SSH", option="oif")
 
 @app.before_request
 def prepare():
@@ -81,6 +88,16 @@ def edit_switching(port):
         return redirect(url_for('main'))
 
 
+@app.route('/get/routers/add', methods=['GET'])
+def add_router_red():
+    return render_template('add_router.html')
+
+
+@app.route('/get/switching/add', methods=['GET'])
+def add_switching_red():
+    return render_template('add_switching.html')
+
+
 @app.route('/post/routers/add', methods=['POST'])
 def add_router():
     name = request.form.get('name', None)
@@ -113,6 +130,64 @@ def add_switching():
         flash(g.database.add_switching(ext_p, ip, int_p))
     return redirect(url_for('main'))
 
-app.run()
+
+@app.route('/get/ssh/send/<string:router>', methods=["GET"])
+def ssh_send(router):
+    return render_template('ssh_info.html', hostname=router)
 
 
+@app.route('/post/ssh/put/<string:router>', methods=["POST"])
+def ssh_put(router):
+    login = request.form.get('login', None)
+    pw = request.form.get('pass', None)
+    if login is None or pw is None:
+        flash('Smth bad has happened')
+    else:
+        try:
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            rt, ip = g.database.get_router(router)
+            client.connect(hostname=ip, username=login, password=pw, port=ssh_port)
+            stdin, stdout, stderr = client.exec_command("")
+            fclient = client.open_sftp()
+            file = fclient.open(path, "w")
+            sw = g.database.get_switchings()
+            res = []
+            file.write('*nat\n')
+            file.write(":PREROUTING ACCEPT [0:0]\n")
+            file.write(":INPUT ACCEPT [0:0]\n")
+            file.write(":OUTPUT ACCEPT [0:0]\n")
+            file.write(":POSTROUTING ACCEPT [0:0]\n")
+
+            for line in sw:
+                file.write("-A PREROUTING -d {eip}/32 -p tcp -m tcp --dport {ep}"
+                            " -j DNAT --to-destination {ip}:{p}\n".format(eip=ip, ep=line[0],
+                                                                        ip=line[1], p=line[2]))
+            file.write("-A POSTROUTING -p tcp -m tcp -o {int} -j MASQUERADE\n".format(int=intf))
+            file.write("COMMIT\n")
+            file.flush()
+            file.close()
+            fclient.close()
+            client.exec_command('iptables-restore < {path}'.format(path=path))
+
+            flash("Successful sending")
+        except OSError as err:
+            flash(err.__str__())
+        except paramiko.AuthenticationException as err:
+            flash(err.__str__())
+    return redirect(url_for('main'))
+
+
+@app.route('/get/router/delete/<string:router>', methods=['GET'])
+def delete_router(router):
+    flash(g.database.delete_router(router))
+    return redirect(url_for('main'))
+
+
+@app.route('/get/switching/delete/<string:port>', methods=['GET'])
+def delete_switching(port):
+    flash(g.database.delete_switching(port))
+    return redirect(url_for('main'))
+
+
+app.run(host='0.0.0.0')

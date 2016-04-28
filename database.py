@@ -41,6 +41,8 @@ class DBHandler:
         self.strings['edit_router'] = "UPDATE routers SET name = ?, extern_ip = ? WHERE name = ?"
         self.strings['edit_switching'] = "UPDATE switching SET extern_port = ?, intern_ip = ?," \
                                          "intern_port = ? WHERE extern_port = ?"
+        self.strings['delete_router'] = "DELETE from routers WHERE name = ?"
+        self.strings['delete_switching'] = "DELETE from switching WHERE extern_port = ?"
 
     def add_router(self, name, ext_ip):
         try:
@@ -110,6 +112,26 @@ class DBHandler:
             self.conn.commit()
             res = "{port} -> {new_ep} into {ip}:{new_p}".format(
                 port=port, new_ep=new_ep, ip=ip, new_p=new_p)
+        except sqlite3.IntegrityError as err:
+            res = err.__str__()
+        return res
+
+    def delete_router(self, name):
+        cur = self.conn.cursor()
+        try:
+            cur.execute(self.strings['delete_router'], (name,))
+            self.conn.commit()
+            res = "Router {name} deleted".format(name=name)
+        except sqlite3.IntegrityError as err:
+            res = err.__str__()
+        return res
+
+    def delete_switching(self, port):
+        cur = self.conn.cursor()
+        try:
+            cur.execute(self.strings['delete_switching'], (port,))
+            self.conn.commit()
+            res = "Switching rule for {port} deleted".format(port=port)
         except sqlite3.IntegrityError as err:
             res = err.__str__()
         return res
