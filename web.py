@@ -11,10 +11,6 @@ app.config.from_pyfile('flask.conf')
 regexpip = "^(((25[1-5])|(2[1-4][0-9])|([0-1]?[0-9]{1,2}))\.){3,3}\
 ((25[1-5])|(2[1-4][0-9])|([0-1]?[0-9]{1,2}))$"
 parser = ConfigParser()
-parser.read(filenames='settings.conf')
-ssh_port = parser.getint(section="SSH", option="port")
-path = parser.get(section="SSH", option="path")
-intf = parser.get(section="SSH", option="oif")
 
 @app.before_request
 def prepare():
@@ -144,6 +140,11 @@ def ssh_put(router):
         flash('Smth bad has happened')
     else:
         try:
+            parser.read(filenames='settings.conf')
+            ssh_port = parser.getint(section="SSH", option="port")
+            path = parser.get(section="SSH", option="path")
+            outif = parser.get(section="SSH", option="output_if")
+            inif = parser.get(section="SSH", option="input_if")
             client = paramiko.SSHClient()
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             rt, ip = g.database.get_router(router)
@@ -163,7 +164,9 @@ def ssh_put(router):
                 file.write("-A PREROUTING -d {eip}/32 -p tcp -m tcp --dport {ep}"
                             " -j DNAT --to-destination {ip}:{p}\n".format(eip=ip, ep=line[0],
                                                                         ip=line[1], p=line[2]))
-            file.write("-A POSTROUTING -p tcp -m tcp -o {int} -j MASQUERADE\n".format(int=intf))
+            file.write("-A POSTROUTING -p tcp -m conntrack --ctstate DNAT -o {int}"
+                       " -j MASQUERADE\n".format(int=outif))
+            file.write("-A POSTROUTING -p tcp -m tcp -o {int} -j MASQUERADE\n".format(int=inif))
             file.write("COMMIT\n")
             file.flush()
             file.close()
