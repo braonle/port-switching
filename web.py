@@ -149,25 +149,26 @@ def ssh_put(router):
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             rt, ip = g.database.get_router(router)
             client.connect(hostname=ip, username=login, password=pw, port=ssh_port)
-            stdin, stdout, stderr = client.exec_command("")
+            client.exec_command('')
             fclient = client.open_sftp()
             file = fclient.open(path, "w")
-            sw = g.database.get_switchings()
-            res = []
-            file.write('*nat\n')
-            file.write(":PREROUTING ACCEPT [0:0]\n")
-            file.write(":INPUT ACCEPT [0:0]\n")
-            file.write(":OUTPUT ACCEPT [0:0]\n")
-            file.write(":POSTROUTING ACCEPT [0:0]\n")
+            res = [{'ep': line[0], 'ip': line[1], 'p': line[2]} for line in g.database.get_switchings()]
+            # file.write('*nat\n')
+            # file.write(":PREROUTING ACCEPT [0:0]\n")
+            # file.write(":INPUT ACCEPT [0:0]\n")
+            # file.write(":OUTPUT ACCEPT [0:0]\n")
+            # file.write(":POSTROUTING ACCEPT [0:0]\n")
+            #
+            # for line in sw:
+            #     file.write("-A PREROUTING -d {eip}/32 -p tcp -m tcp --dport {ep}"
+            #                 " -j DNAT --to-destination {ip}:{p}\n".format(eip=ip, ep=line[0],
+            #                                                             ip=line[1], p=line[2]))
+            # file.write("-A POSTROUTING -p tcp -m conntrack --ctstate DNAT -o {int}"
+            #            " -j MASQUERADE\n".format(int=outif))
+            # file.write("-A POSTROUTING -p tcp -m tcp -o {int} -j MASQUERADE\n".format(int=inif))
+            # file.write("COMMIT\n")
 
-            for line in sw:
-                file.write("-A PREROUTING -d {eip}/32 -p tcp -m tcp --dport {ep}"
-                            " -j DNAT --to-destination {ip}:{p}\n".format(eip=ip, ep=line[0],
-                                                                        ip=line[1], p=line[2]))
-            file.write("-A POSTROUTING -p tcp -m conntrack --ctstate DNAT -o {int}"
-                       " -j MASQUERADE\n".format(int=outif))
-            file.write("-A POSTROUTING -p tcp -m tcp -o {int} -j MASQUERADE\n".format(int=inif))
-            file.write("COMMIT\n")
+            file.writelines(render_template('iptables_template', param=res, outif=outif, inif=inif, eip=ip))
             file.flush()
             file.close()
             fclient.close()

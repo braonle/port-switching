@@ -1,0 +1,17 @@
+*nat
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+
+# Generated section start
+{% for line in param %}
+-A PREROUTING -d {{ eip }}/32 -p tcp -m tcp --dport {{ line.ep }} -j DNAT --to-destination {{ line.ip }}:{{ line.p }}
+{% endfor %}
+-A POSTROUTING -p tcp -m conntrack --ctstate DNAT -o {{ outif }} -j MASQUERADE
+-A POSTROUTING -p tcp -m tcp -o {{ inif }} -j MASQUERADE
+
+# Generated section end
+
+COMMIT
+
