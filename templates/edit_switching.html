@@ -10,9 +10,9 @@
         <p>{{ msg }}</p>
     {% endfor %}
     <form action="{{ url_for('edit_switching', port = ext_p) }}" method="post">
-        <p>External port <input type="text" value="{{ ext_p }}" name="ext_p"/></p>
-        <p>Internal IP <input type="text" value="{{ ip }}" name="ip"/></p>
-        <p>Internal port <input type="text" value="{{ int_p }}" name="int_p"></p>
+        <p>External port &nbsp;&nbsp;<input type="text" value="{{ ext_p }}" name="ext_p"/></p>
+        <p>Internal IP &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" value="{{ ip }}" name="ip"/></p>
+        <p>Internal port &nbsp;&nbsp;&nbsp;<input type="text" value="{{ int_p }}" name="int_p"></p>
         <input type="submit" value="Commit"/>
     </form>
 </body>
