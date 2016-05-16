@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Add router</title>
+    <link rel="stylesheet" type="text/css" href={{ url_for('static', filename='style.css') }}>
 </head>
 <body>
     {% for msg in get_flashed_messages() %}
         <p>{{ msg }}</p>
     {% endfor %}
     <form action="{{ url_for('add_router') }}" method="post">
-        <p>Hostname <input type="text" name="name"/></p>                                      <p/>
+        <p>Hostname <input type="text" name="name"/></p>
         <p>Address <input type="text" name="ip"/></p>
         <p><input type="submit" value="Commit"/></p>
     </form>

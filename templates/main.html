@@ -13,10 +13,18 @@
     {% endfor %}
     <p><a href="{{ url_for('add_router_red')}}">Add router</a></p>
     <p><a href="{{ url_for('add_switching_red')}}">Add switching rule</a></p>
-    <table border="0">
+    <p><a href="{{ url_for('ssh_send_all')}}">Send all</a></p>
+    <table border="0" class="frame">
         <tr>
             <td>
-                 <table class="main_table" border="1">
+                 <table class="main_table" border="0">
+                     <tr>
+                         <td>Hostname</td>
+                         <td>IP address</td>
+                         <td></td>
+                         <td></td>
+                         <td></td>
+                    </tr>
                     {% for row in routers %}
                         <tr>
                             <td>{{ row.name }}</td>
@@ -31,8 +39,15 @@
                     {% endfor %}
                  </table>
             </td>
-            <td>
-                <table class="main_table" border="1">
+            <td class="cell" align="right">
+                <table class="main_table" border="0">
+                    <tr>
+                        <td>External port</td>
+                        <td>Internal IP</td>
+                        <td>Internal port</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                     {% for row in switching %}
                         <tr>
                             <td>{{ row.ext_p }}</td>

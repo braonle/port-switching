@@ -1,5 +1,34 @@
-.main_table
+body
 {
-    border-width: 0px;
-    border-collapse: collapse;
+    font-size: 14px;
+    font-family: Arial;
+    background: #daffd4;
+}
+
+td
+{
+    padding: 2px;
+}
+
+a
+{
+    color: black;
+}
+
+.main_table, .right
+{
+    border-width: 1px;
+    border-spacing: 15px;
+}
+.frame
+{
+    width: 100%;
+}
+.cell, .right
+{
+    vertical-align: top;
+}
+.right
+{
+    text-align: right;
 }
