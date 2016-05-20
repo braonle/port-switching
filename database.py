@@ -97,9 +97,9 @@ class DBHandler:
         try:
             cur.execute(self.strings['edit_router'], (name, ip, router))
             self.conn.commit()
-            res = "{router} -> {name} : {ip} changed".format(router=router, name=name, ip=ip)
+            res = (False, "{router} -> {name} : {ip} changed".format(router=router, name=name, ip=ip))
         except sqlite3.IntegrityError as err:
-            res = str(err)
+            res = (True, str(err))
         return res
 
     def edit_switching(self, port, new_ep, ip, new_p):
@@ -107,10 +107,10 @@ class DBHandler:
         try:
             cur.execute(self.strings['edit_switching'], (new_ep, ip, new_p, port))
             self.conn.commit()
-            res = "{port} -> {new_ep} into {ip}:{new_p}".format(
-                port=port, new_ep=new_ep, ip=ip, new_p=new_p)
+            res = (False, "{port} -> {new_ep} into {ip}:{new_p}".format(
+                port=port, new_ep=new_ep, ip=ip, new_p=new_p))
         except sqlite3.IntegrityError as err:
-            res = str(err)
+            res = (True, str(err))
         return res
 
     def delete_router(self, name):

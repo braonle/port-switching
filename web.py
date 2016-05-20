@@ -47,68 +47,89 @@ def main():
     return render_template('main.html', routers=rt, switching=sw)
 
 
-@app.route('/get/routers/edit/<string:name>')
-def redirect_edit_router(name):
-    res = g.database.get_router(name)
+@app.route('/get/routers/edit')
+def redirect_edit_router(**kwargs):
+    if len(kwargs) == 0:
+        name = request.args.get('name', None)
+        res = g.database.get_router(name)
+        res = (res[0], res[1], name)
+    else:
+        res = kwargs['res']
     if res is None:
         return abort(404)
-    return render_template('edit_router.html', name=res[0], ip=res[1])
+    return render_template('edit_router.html', name=res[0], ip=res[1], new_name = res[2])
 
 
-@app.route('/get/switching/edit/<int:port>')
-def redirect_edit_switching(port):
-    res = g.database.get_switching(port)
+@app.route('/get/switching/edit')
+def redirect_edit_switching(**kwargs):
+    if len(kwargs) == 0:
+        port = request.args.get('port', None)
+        res = g.database.get_switching(port)
+        res = (res[0], res[1], res[2], port)
+    else:
+        res = kwargs['res']
     if res is None:
         return abort(404)
-    return render_template('edit_switching.html', ext_p=res[0], ip=res[1], int_p=res[2])
+    return render_template('edit_switching.html', ext_p=res[0], ip=res[1], int_p=res[2], port=res[3])
 
 
 @app.route('/post/routers/edit/<string:name>', methods=['POST'])
 def edit_router(name):
-    new_name = request.form.get('name', None)
-    ip = request.form.get('ip', None)
+    res = [name, request.form.get('ip', None), request.form.get('new_name', None)]
+    flg = False
     try:
-        net = ipaddress.ip_address(ip)
+        net = ipaddress.ip_address(res[1])
     except ValueError:
         net = None
-    if name is None or ip is None or new_name is None:
+    if name is None or res[1] is None or res[0] is None:
         log('Smth bad has happened')
-        return redirect(url_for('redirect_edit_router', name=name))
-    elif len(new_name) == 0:
+        flg = True
+    if len(res[2]) == 0:
         log("Empty name")
-        return redirect(url_for('redirect_edit_router', name=name))
-    elif net is None:
+        flg = True
+    if net is None:
         log("Bad IP address")
-        return redirect(url_for('redirect_edit_router', name=name))
+        flg = True
+
+    if flg:
+        return redirect_edit_router(res=res)
     else:
-        log(g.database.edit_router(name, ip, new_name))
-        return redirect(url_for('main'))
+        r = g.database.edit_router(name, res[1], res[2])
+        log(r[1])
+        if r[0]:
+            return redirect_edit_router(res=res)
+    return redirect(url_for('main'))
 
 
 @app.route('/post/switching/edit/<int:port>', methods=['POST'])
 def edit_switching(port):
-    new_ep = request.form.get('ext_p', None)
-    ip = request.form.get('ip', None)
-    new_p = request.form.get('int_p', None)
+    res = [request.form.get('ext_p', None), request.form.get('ip', None),
+           request.form.get('int_p', None), port]
+    flg = False
     try:
-        net = ipaddress.ip_address(ip)
+        net = ipaddress.ip_address(res[1])
     except ValueError:
         net = None
-    if new_ep is None or ip is None or new_p is None:
+    if res[0] is None or res[1] is None or res[2] is None:
         log('Smth bad has happened')
-        return redirect(url_for('redirect_edit_switching', port=port))
-    elif not new_ep.isdigit() or not int(new_ep) in range(1, 65536):
+        flg = True
+    if not res[0].isdigit() or not int(res[0]) in range(1, 65536):
         log("Bad external port")
-        return redirect(url_for('redirect_edit_switching', port=port))
-    elif not new_p.isdigit() or not int(new_p) in range(1, 65536):
+        flg = True
+    if not res[2].isdigit() or not int(res[2]) in range(1, 65536):
         log("Bad internal port")
-        return redirect(url_for('redirect_edit_switching', port=port))
-    elif net is None:
+        flg = True
+    if net is None:
         log("Bad IP address")
-        return redirect(url_for('redirect_edit_switching', port=port))
+        flg = True
+    if flg:
+        return redirect_edit_switching(res=res)
     else:
-        log(g.database.edit_switching(port, new_ep, ip, new_p))
-        return redirect(url_for('main'))
+        r = g.database.edit_switching(port, res[0], res[1], res[2])
+        log(r[1])
+        if r[0]:
+            return redirect_edit_switching(res=res)
+    return redirect(url_for('main'))
 
 
 @app.route('/get/routers/add')
