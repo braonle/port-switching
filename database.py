@@ -4,21 +4,14 @@ from configparser import ConfigParser
 
 class DBHandler:
     def __init__(self, conf):
-        # Configuration load
-        # Используем парсер, чтобы не вытаскивать параметры руками
         self.parser = ConfigParser()
         self.parser.read(filenames=conf)
-
-        # Parameters initialization
+        # Contains strings for executing SQL-specific queries
         self.strings = {}
         self.conn = None
-
-        # Initializing specifics for databases
-        # Есть SQLite3 и PostgreSQL, например. У них разная передача параметров ((?,?) и (%s, %s))
-        # в запросе, плюс разные библиотеки использовать надо. Чтобы не плодить if'ы, можно сделать
-        # map, в него засунуть ключи и функции, инициализирующие базу. А дальше просто этот обработчик
-        # вызывать, если он не предусмотрен - ругаться.
+        # Getting handlers for different SQL agents
         conns = self.__handlers_init()
+        # Realizing which SQL to deal with
         conn_init = conns.get(self.parser.get(section="DATABASE", option="type"), None)
         if conn_init is not None:
             conn_init()
@@ -36,8 +29,8 @@ class DBHandler:
         self.strings['select_routers'] = "SELECT name, extern_ip from routers"
         self.strings['select_router'] = "SELECT name, extern_ip from routers WHERE name = ?"
         self.strings['select_switchings'] = "SELECT extern_port, intern_ip, intern_port from switching"
-        self.strings['select_switching'] = "SELECT extern_port, intern_ip, intern_port from switching WHERE " \
-                                           "extern_port = ?"
+        self.strings['select_switching'] = "SELECT extern_port, intern_ip, intern_port " \
+                                           "from switching WHERE extern_port = ?"
         self.strings['edit_router'] = "UPDATE routers SET name = ?, extern_ip = ? WHERE name = ?"
         self.strings['edit_switching'] = "UPDATE switching SET extern_port = ?, intern_ip = ?," \
                                          "intern_port = ? WHERE extern_port = ?"
@@ -48,22 +41,21 @@ class DBHandler:
         try:
             self.conn.cursor().execute(self.strings['add_router'], (ext_ip, name))
             self.conn.commit()
-            res = "Success: {name} : {addr} added".format(name=name, addr=ext_ip)
+            res = (False, "{name} : {addr} added".format(name=name, addr=ext_ip))
         except sqlite3.IntegrityError as err:
-            res = err.__str__()
+            res = (True, str(err))
         return res
 
     def add_switching(self, ext_port, int_ip, int_port):
         try:
             self.conn.cursor().execute(self.strings['add_switching'], (ext_port, int_ip, int_port))
             self.conn.commit()
-            res = "Success: switching rule {ext_port} -> {ip}:{int_port} added".format(
-                ext_port=ext_port, ip=int_ip, int_port=int_port)
+            res = (False, "Switching rule {ext_port} -> {ip}:{int_port} added".format(
+                ext_port=ext_port, ip=int_ip, int_port=int_port))
         except sqlite3.IntegrityError as err:
-            res = err.__str__()
+            res = (True, str(err))
         return res
 
-    # For web table of routers
     def get_routers(self):
         res = []
         cur = self.conn.cursor()
@@ -73,7 +65,6 @@ class DBHandler:
             res.append((name, eip))
         return res
 
-    # For web table of switching rules
     def get_switchings(self):
         res = []
         cur = self.conn.cursor()
@@ -86,13 +77,19 @@ class DBHandler:
     def get_router(self, router):
         cur = self.conn.cursor()
         cur.execute(self.strings['select_router'], (router,))
-        (name, eip) = cur.fetchone()
+        res = cur.fetchone()
+        if res is None:
+            return res
+        (name, eip) = res
         return name, eip
 
     def get_switching(self, port):
         cur = self.conn.cursor()
         cur.execute(self.strings['select_switching'], (port,))
-        (ep, ip, p) = cur.fetchone()
+        res = cur.fetchone()
+        if res is None:
+            return res
+        (ep, ip, p) = res
         return ep, ip, p
 
     def edit_router(self, router, ip, name):
@@ -102,7 +99,7 @@ class DBHandler:
             self.conn.commit()
             res = "{router} -> {name} : {ip} changed".format(router=router, name=name, ip=ip)
         except sqlite3.IntegrityError as err:
-            res = err.__str__()
+            res = str(err)
         return res
 
     def edit_switching(self, port, new_ep, ip, new_p):
@@ -113,7 +110,7 @@ class DBHandler:
             res = "{port} -> {new_ep} into {ip}:{new_p}".format(
                 port=port, new_ep=new_ep, ip=ip, new_p=new_p)
         except sqlite3.IntegrityError as err:
-            res = err.__str__()
+            res = str(err)
         return res
 
     def delete_router(self, name):
@@ -123,7 +120,7 @@ class DBHandler:
             self.conn.commit()
             res = "Router {name} deleted".format(name=name)
         except sqlite3.IntegrityError as err:
-            res = err.__str__()
+            res = str(err)
         return res
 
     def delete_switching(self, port):
@@ -133,7 +130,7 @@ class DBHandler:
             self.conn.commit()
             res = "Switching rule for {port} deleted".format(port=port)
         except sqlite3.IntegrityError as err:
-            res = err.__str__()
+            res = str(err)
         return res
 
     def __del__(self):
