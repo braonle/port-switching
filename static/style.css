@@ -14,8 +14,16 @@ a
 {
     color: black;
 }
-
-.main_table, .right
+input
+{
+    border:solid 1px #ccc;
+    border-radius: 5px;
+}
+.refs, .msg
+{
+    margin: 15px 0px 0px 15px;
+}
+.main_table
 {
     border-width: 1px;
     border-spacing: 15px;
@@ -28,7 +36,7 @@ a
 {
     vertical-align: top;
 }
-.right
+.msg
 {
-    text-align: right;
+    color: red;
 }

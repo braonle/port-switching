@@ -41,10 +41,14 @@ def clean(exc):
 
 @app.route('/')
 def main():
-    rt = ({'name': row[0], 'ext_ip': row[1]} for row in g.database.get_routers())
-    sw = ({'ext_p': rows[0], 'ip': rows[1], 'int_p': rows[2]}
-          for rows in g.database.get_switchings())
-    return render_template('main.html', routers=rt, switching=sw)
+    rt = [{'name': row[0], 'ext_ip': row[1]} for row in g.database.get_routers()]
+    sw = [{'ext_p': rows[0], 'ip': rows[1], 'int_p': rows[2]}
+          for rows in g.database.get_switchings()]
+    maxhost = 9
+    for i in rt:
+        if len(i['name']) > maxhost:
+            maxhost = len(i['name'])
+    return render_template('main.html', routers=rt, switching=sw, hsize=maxhost)
 
 
 @app.route('/get/routers/edit')

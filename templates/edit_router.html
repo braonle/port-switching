@@ -13,7 +13,7 @@
     <form action="{{ url_for('edit_router', name = name) }}" method="post">
         <p>Hostname &nbsp;&nbsp;&nbsp;<input type="text" value="{{ new_name }}" name="new_name"/></p>
         <p>External IP &nbsp;&nbsp;<input type="text" value="{{ ip }}" name="ip"/></p>
-        <input type="submit" value="Commit"/>
+        <button type="submit">Commit</button>
     </form>
 </body>
 </body>

@@ -9,38 +9,58 @@
 </head>
 <body>
     {% for msg in get_flashed_messages() %}
-        <p>{{ msg }}</p>
+        <p class="msg">{{ msg }}</p>
     {% endfor %}
-    <p><a href="{{ url_for('add_router_red', param=None)}}">Add router</a></p>
-    <p><a href="{{ url_for('add_switching_red', param=None)}}">Add switching rule</a></p>
-    <p><a href="{{ url_for('ssh_send_all')}}">Send all</a></p>
+    <p class="refs"><a href="{{ url_for('add_router_red', param=None)}}">Add router</a></p>
+    <p class="refs"><a href="{{ url_for('add_switching_red', param=None)}}">Add switching rule</a></p>
+    <p class="refs"><a href="{{ url_for('ssh_send_all')}}">Send all</a></p>
     <table border="0" class="frame">
         <tr>
-            <td>
+            <td class="cell">
                  <table class="main_table" border="0">
-                     <tr>
-                         <td>Hostname</td>
-                         <td>IP address</td>
-                         <td></td>
-                         <td></td>
-                         <td></td>
-                    </tr>
-                    {% for row in routers %}
                         <tr>
-                            <td>{{ row.name }}</td>
-                            <td>{{ row.ext_ip }}</td>
-                            <td><input type="submit" value="Edit" onclick=
-                                    'relocate("{{ url_for('redirect_edit_router', name=row.name) }}")'/></td>
-                            <td><input type="submit" value="Send" onclick=
-                                    'relocate("{{ url_for('ssh_send', router=row.name) }}")'/></td>
-                            <td><input type="submit" value="Delete" onclick=
-                                    'confirm_delrt("{{ url_for('delete_router', router=row.name) }}", "{{ row.name }}")'/></td>
+                             <td>
+                                 <input placeholder="Search" oninput="filter(this)" size="{{ hsize }}"
+                                        class="main_table_input"/>
+                             </td>
+                             <td></td>
+                             <td></td>
+                             <td></td>
+                             <td></td>
                         </tr>
-                    {% endfor %}
+                         <tr>
+                             <td>Hostname</td>
+                             <td>IP address</td>
+                             <td></td>
+                             <td></td>
+                             <td></td>
+                        </tr>
+                        {% for row in routers %}
+                            <tr>
+                                <td>{{ row.name }}</td>
+                                <td>{{ row.ext_ip }}</td>
+                                <td><button type="submit" onclick='relocate("{{ url_for('redirect_edit_router',
+                                            name=row.name) }}")'>Edit</button></td>
+                                <td><button type="submit" onclick=
+                                        'relocate("{{ url_for('ssh_send', router=row.name) }}")'>Send</button></td>
+                                <td><button type="submit" onclick='confirm_delrt("{{ url_for('delete_router', router=row.name) }}",
+                                        "{{ row.name }}")'>Delete</button></td>
+                            </tr>
+                        {% endfor %}
                  </table>
             </td>
-            <td class="cell" align="right">
-                <table class="main_table" border="0">
+            <td class="cell">
+                <table class="main_table" border="0" align="right">
+                    <tr>
+                        <td>
+                            <input placeholder="Search" oninput="filter(this)" size="6"
+                                   class="main_table_input"/>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                     <tr>
                         <td>External port</td>
                         <td>Internal IP</td>
@@ -53,10 +73,10 @@
                             <td>{{ row.ext_p }}</td>
                             <td>{{ row.ip }}</td>
                             <td>{{ row.int_p }}</td>
-                            <td><input type="submit" value="Edit" onclick=
-                                    'relocate("{{ url_for('redirect_edit_switching', port=row.ext_p) }}")'/></td>
-                            <td><input type="submit" value="Delete" onclick=
-                                    'confirm_delsw("{{ url_for('delete_switching', port=row.ext_p) }}", "{{ row.ext_p }}")'/></td>
+                            <td><button type="submit" onclick=
+                                    'relocate("{{ url_for('redirect_edit_switching', port=row.ext_p) }}")'>Edit</button></td>
+                            <td><button type="submit" onclick='confirm_delsw("{{ url_for('delete_switching', port=row.ext_p) }}",
+                                    "{{ row.ext_p }}")'>Delete</button></td>
                         </tr>
                     {% endfor %}
                  </table>

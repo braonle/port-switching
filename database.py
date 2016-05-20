@@ -26,9 +26,10 @@ class DBHandler:
         self.conn = sqlite3.connect(database=self.parser.get(section="DATABASE", option="database"))
         self.strings['add_router'] = "INSERT INTO routers VALUES(?,?)"
         self.strings['add_switching'] = "INSERT INTO switching VALUES(?,?,?)"
-        self.strings['select_routers'] = "SELECT name, extern_ip from routers"
+        self.strings['select_routers'] = "SELECT name, extern_ip from routers ORDER BY name"
         self.strings['select_router'] = "SELECT name, extern_ip from routers WHERE name = ?"
-        self.strings['select_switchings'] = "SELECT extern_port, intern_ip, intern_port from switching"
+        self.strings['select_switchings'] = "SELECT extern_port, intern_ip, intern_port " \
+                                            "from switching ORDER BY extern_port"
         self.strings['select_switching'] = "SELECT extern_port, intern_ip, intern_port " \
                                            "from switching WHERE extern_port = ?"
         self.strings['edit_router'] = "UPDATE routers SET name = ?, extern_ip = ? WHERE name = ?"
