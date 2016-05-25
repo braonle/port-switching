@@ -6,9 +6,9 @@
 
 # Generated section start
 {% for line in param %}
--A PREROUTING -d {{ eip }}/32 -p tcp -m tcp --dport {{ line.ep }} -j DNAT --to-destination {{ line.ip }}:{{ line.p }}
+-A PREROUTING -d {{ ext_ip }}/32 -p tcp -m tcp --dport {{ line.ext_p }} -j DNAT --to-destination {{ line.ip }}:{{ line.p }}
 {% endfor %}
--A POSTROUTING -p tcp -m tcp -o {{ inif }} -j MASQUERADE
+-A POSTROUTING -p tcp -m tcp -o {{ in_if }} -j MASQUERADE
 # Generated section end
 
 COMMIT

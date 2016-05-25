@@ -1,26 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Main page</title>
-    <script src={{ url_for('static', filename='jquery.js') }}></script>
-    <script src={{ url_for('static', filename='scripts.js') }}></script>
-    <link rel="stylesheet" type="text/css" href={{ url_for('static', filename='style.css') }}>
-</head>
-<body>
-    {% for msg in get_flashed_messages() %}
-        <p class="msg">{{ msg }}</p>
-    {% endfor %}
+{% extends "layout.html" %}
+{% block content %}
     <p class="refs"><a href="{{ url_for('add_router_red', param=None)}}">Add router</a></p>
-    <p class="refs"><a href="{{ url_for('add_switching_red', param=None)}}">Add switching rule</a></p>
+    <p class="refs"><a href="{{ url_for('add_forwarding_red', param=None)}}">Add switching rule</a></p>
     <p class="refs"><a href="{{ url_for('ssh_send_all')}}">Send all</a></p>
     <table border="0" class="frame">
         <tr>
             <td class="cell">
-                 <table class="main_table" border="0">
+                 <table class="main_table" border="0" id="routers">
                         <tr>
                              <td>
-                                 <input placeholder="Search" oninput="filter(this)" size="{{ hsize }}"
+                                 <input placeholder="Search" oninput="filter(this,'routers', 1)" size="{{ hsize }}"
                                         class="main_table_input"/>
                              </td>
                              <td></td>
@@ -50,13 +39,17 @@
                  </table>
             </td>
             <td class="cell">
-                <table class="main_table" border="0" align="right">
+                <table class="main_table" border="0" align="right" id="forward">
                     <tr>
                         <td>
-                            <input placeholder="Search" oninput="filter(this)" size="6"
+                            <input placeholder="Search" oninput="filter(this,'forward', 1)" size="6"
                                    class="main_table_input"/>
                         </td>
-                        <td></td>
+                        <td>
+                            <input placeholder="Search" oninput="filter(this,'forward', 3)" size="13"
+                                   class="main_table_input"/>
+
+                        </td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -68,14 +61,14 @@
                         <td></td>
                         <td></td>
                     </tr>
-                    {% for row in switching %}
+                    {% for row in forwarding %}
                         <tr>
                             <td>{{ row.ext_p }}</td>
                             <td>{{ row.ip }}</td>
                             <td>{{ row.int_p }}</td>
                             <td><button type="submit" onclick=
-                                    'relocate("{{ url_for('redirect_edit_switching', port=row.ext_p) }}")'>Edit</button></td>
-                            <td><button type="submit" onclick='confirm_delsw("{{ url_for('delete_switching', port=row.ext_p) }}",
+                                    'relocate("{{ url_for('redirect_edit_forwarding', port=row.ext_p) }}")'>Edit</button></td>
+                            <td><button type="submit" onclick='confirm_delsw("{{ url_for('delete_forwarding', port=row.ext_p) }}",
                                     "{{ row.ext_p }}")'>Delete</button></td>
                         </tr>
                     {% endfor %}
@@ -83,5 +76,4 @@
             </td>
         </tr>
     </table>
-</body>
-</html>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block content %}
+    <form action="{{ url_for('edit_forwarding', port = port) }}" method="post" class="refs">
+        <p>External port &nbsp;&nbsp;<input type="text" value="{{ ext_p }}" name="ext_p"/></p>
+        <p>Internal IP &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" value="{{ ip }}" name="ip"/></p>
+        <p>Internal port &nbsp;&nbsp;&nbsp;<input type="text" value="{{ int_p }}" name="int_p"></p>
+        <button type="submit">Commit</button>
+    </form>
+{% endblock %}

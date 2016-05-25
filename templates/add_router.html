@@ -1,19 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Add router</title>
-    <link rel="stylesheet" type="text/css" href={{ url_for('static', filename='style.css') }}>
-</head>
-<body>
-    {% for msg in get_flashed_messages() %}
-        <p>{{ msg }}</p>
-    {% endfor %}
-    <form action="{{ url_for('add_router') }}" method="post">
+{% extends "layout.html" %}
+{% block content %}
+    <form action="{{ url_for('add_router') }}" method="post" class="refs">
         <p>Hostname &nbsp;<input type="text" name="name" value="{{ name }}"/></p>
         <p>Address &nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="ip"
                         value="{{ add }}"/></p>
         <p><button type="submit">Commit</button></p>
     </form>
-</body>
-</html>
+{% endblock %}
