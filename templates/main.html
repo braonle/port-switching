@@ -6,10 +6,11 @@
     <table border="0" class="frame">
         <tr>
             <td class="cell">
-                 <table class="main_table" border="0" id="routers">
+                 <table class="main_table" border="0">
+                    <thead>
                         <tr>
                              <td>
-                                 <input placeholder="Search" oninput="filter(this,'routers', 1)" size="{{ hsize }}"
+                                 <input placeholder="Search" oninput="filter(this,'routers', 0)" size="{{ hsize }}"
                                         class="main_table_input"/>
                              </td>
                              <td></td>
@@ -24,8 +25,10 @@
                              <td></td>
                              <td></td>
                         </tr>
+                    </thead>
+                    <tbody id="routers">
                         {% for row in routers %}
-                            <tr>
+                            <tr id="rt{{ loop.index }}">
                                 <td>{{ row.name }}</td>
                                 <td>{{ row.ext_ip }}</td>
                                 <td><button type="submit" onclick='relocate("{{ url_for('redirect_edit_router',
@@ -33,45 +36,50 @@
                                 <td><button type="submit" onclick=
                                         'relocate("{{ url_for('ssh_send', router=row.name) }}")'>Send</button></td>
                                 <td><button type="submit" onclick='confirm_delrt("{{ url_for('delete_router', router=row.name) }}",
-                                        "{{ row.name }}")'>Delete</button></td>
+                                        "{{ row.name }}", "rt{{ loop.index }}")'>Delete</button></td>
                             </tr>
                         {% endfor %}
+                    </tbody>
                  </table>
             </td>
             <td class="cell">
-                <table class="main_table" border="0" align="right" id="forward">
-                    <tr>
-                        <td>
-                            <input placeholder="Search" oninput="filter(this,'forward', 1)" size="6"
-                                   class="main_table_input"/>
-                        </td>
-                        <td>
-                            <input placeholder="Search" oninput="filter(this,'forward', 3)" size="13"
-                                   class="main_table_input"/>
-
-                        </td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>External port</td>
-                        <td>Internal IP</td>
-                        <td>Internal port</td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    {% for row in forwarding %}
+                <table class="main_table" border="0" align="right">
+                    <thead>
                         <tr>
+                            <td>
+                                <input placeholder="Search" oninput="filter(this,'forward', 0)" size="6"
+                                       class="main_table_input"/>
+                            </td>
+                            <td>
+                                <input placeholder="Search" oninput="filter(this,'forward', 1)" size="13"
+                                       class="main_table_input"/>
+
+                            </td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>External port</td>
+                            <td>Internal IP</td>
+                            <td>Internal port</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </thead>
+                    <tbody id="forward">
+                        {% for row in forwarding %}
+                        <tr id="fw{{ loop.index }}">
                             <td>{{ row.ext_p }}</td>
                             <td>{{ row.ip }}</td>
                             <td>{{ row.int_p }}</td>
                             <td><button type="submit" onclick=
                                     'relocate("{{ url_for('redirect_edit_forwarding', port=row.ext_p) }}")'>Edit</button></td>
                             <td><button type="submit" onclick='confirm_delsw("{{ url_for('delete_forwarding', port=row.ext_p) }}",
-                                    "{{ row.ext_p }}")'>Delete</button></td>
+                                    "{{ row.ext_p }}", "fw{{ loop.index }}")'>Delete</button></td>
                         </tr>
-                    {% endfor %}
+                        {% endfor %}
+                    </tbody>
                  </table>
             </td>
         </tr>

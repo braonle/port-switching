@@ -71,19 +71,17 @@ class DBHandler:
     def get_router(self, router):
         cur = self.conn.cursor()
         cur.execute(self.strings['select_router'], (router,))
-        res = cur.fetchone()
-        return res
+        return cur.fetchone()
 
     def get_forwarding(self, port):
         cur = self.conn.cursor()
         cur.execute(self.strings['select_forwarding'], (port,))
-        res = cur.fetchone()
-        return res
+        return cur.fetchone()
 
-    # Returns a tuple with the first argument to indicate
-    # whether an error occurred (set True in this case)
-    # and the second one with the actual result
     def edit_router(self, router, ip, name):
+        """Returns a tuple with the first argument to indicate
+        whether an error occurred (set True in this case)
+        and the second one with the actual result"""
         cur = self.conn.cursor()
         try:
             cur.execute(self.strings['edit_router'], (name, ip, router))
@@ -93,10 +91,10 @@ class DBHandler:
             res = (True, str(err))
         return res
 
-    # Returns a tuple with the first argument to indicate
-    # whether an error occurred (set True in this case)
-    # and the second one with the actual result
     def edit_forwarding(self, port, new_ep, ip, new_p):
+        """Returns a tuple with the first argument to indicate
+        whether an error occurred (set True in this case)
+        and the second one with the actual result"""
         cur = self.conn.cursor()
         try:
             cur.execute(self.strings['edit_forwarding'], (new_ep, ip, new_p, port))

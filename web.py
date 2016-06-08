@@ -278,7 +278,8 @@ def ssh_send_all():
 def delete_router():
     router = request.form.get("router")
     s = g.database.delete_router(router)
-    log(s)
+    logging.debug(s)
+    print(s)
     return s
 
 
@@ -286,7 +287,8 @@ def delete_router():
 def delete_forwarding():
     port = request.form.get("ext_p")
     s = g.database.delete_forwarding(port)
-    log(s)
+    logging.debug(s)
+    print(s)
     return s
 
 
