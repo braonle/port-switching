@@ -1,5 +1,5 @@
-# -*-coding:utf-8-*-
-# /usr/bin/python3
+# *!*/usr/bin/python3
+# -*- coding: utf-8 -*-
 from flask import Flask, render_template, request, redirect, url_for, g, flash, abort
 from database import DBHandler
 import paramiko
@@ -7,28 +7,48 @@ from configparser import ConfigParser
 import logging
 import ipaddress
 
-
 # DEB: /etc/default/iptables
 # RPM: /etc/sysconfig/iptables
 
+
+class FlashHandler(logging.StreamHandler):
+    def emit(self, record):
+        try:
+            with app.test_request_context():
+                flash(self.format(record))
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
+
 app = Flask(__name__)
-app.config.from_pyfile('flask.conf')
+app.config.from_pyfile('flask_conf.py')
 parser = ConfigParser()
 parser.read(filenames='settings.conf')
-logging.basicConfig(
-    filename=parser.get(section="COMMON", option="logfile"),
-    level=logging.DEBUG,
-    filemode="w",
-    format='%(levelname)s:%(asctime)s - %(message)s'
-)
 
+# TODO logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+h = logging.StreamHandler()
+h.setLevel(level=logging.INFO)
+fm = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+h.setFormatter(fmt=fm)
+logger.addHandler(h)
+
+h = logging.FileHandler(filename='log.txt', mode='a', encoding='UTF-8')
+h.setLevel(level=logging.DEBUG)
+fm = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+h.setFormatter(fmt=fm)
+logger.addHandler(h)
+
+logger.info('start')
 
 # Made a separate procedure for easier adding new destinations
 # for logging
 def log(s):
-    flash(s)
-    logging.debug(s)
-    print(s)
+    logger.info(s)
 
 
 @app.before_request
@@ -46,7 +66,7 @@ def clean(exc):
 
 @app.route('/')
 def main():
-    rt = [{'name': row[0], 'ext_ip': row[1]} for row in g.database.get_routers()]
+    rt = [{'name': rows[0], 'ext_ip': rows[1]} for rows in g.database.get_routers()]
     sw = [{'ext_p': rows[0], 'ip': rows[1], 'int_p': rows[2]}
           for rows in g.database.get_forwardings()]
     maxhost = 9
@@ -59,12 +79,14 @@ def main():
 
 @app.route('/get/routers/edit')
 def redirect_edit_router(**kwargs):
+    # Initial request for router editing
     if len(kwargs) == 0:
         name = request.args.get('name')
         res = g.database.get_router(name)
         if res is None:
             return abort(404)
         res = (res[0], res[1], name)
+    # This routing is issued from edit_router() due to bad parameters
     else:
         res = kwargs['res']
     return render_template('edit_router.html', name=res[0], ip=res[1], new_name=res[2],
@@ -73,12 +95,14 @@ def redirect_edit_router(**kwargs):
 
 @app.route('/get/forwarding/edit')
 def redirect_edit_forwarding(**kwargs):
+    # Initial request for forwarding rules editing
     if len(kwargs) == 0:
         port = request.args.get('port')
         res = g.database.get_forwarding(port)
         if res is None:
             return abort(404)
         res = (res[0], res[1], res[2], port)
+    # This routing is issued from edit_forwarding() due to bad parameters
     else:
         res = kwargs['res']
     return render_template('edit_forwarding.html', ext_p=res[0], ip=res[1], int_p=res[2], port=res[3],
@@ -87,6 +111,7 @@ def redirect_edit_forwarding(**kwargs):
 
 @app.route('/post/routers/edit/<string:name>', methods=['POST'])
 def edit_router(name):
+    """Checks input values' validity, thus saving data or discarding them"""
     res = [name, request.form.get('ip'), request.form.get('new_name')]
     flg = False
     try:
@@ -115,6 +140,7 @@ def edit_router(name):
 
 @app.route('/post/forwarding/edit/<int:port>', methods=['POST'])
 def edit_forwarding(port):
+    """Checks input values' validity, thus saving data or discarding them"""
     res = [request.form.get('ext_p'), request.form.get('ip'),
            request.form.get('int_p'), port]
     flg = False
@@ -147,6 +173,8 @@ def edit_forwarding(port):
 @app.route('/get/routers/add')
 def add_router_red(**kwargs):
     param = kwargs.get('param')
+    # Case of initial page load; otherwise parameters
+    # are returned by add_router for displaying or editing
     if param is None:
         param = ['', '']
     for i in range(0, 1):
@@ -159,6 +187,8 @@ def add_router_red(**kwargs):
 @app.route('/get/forwarding/add')
 def add_forwarding_red(**kwargs):
     param = kwargs.get('param')
+    # Case of initial page load; otherwise some parameters
+    # are returned by add_forwarding for displaying or editing
     if param is None:
         param = ['', '', '']
     for i in range(0, 2):
@@ -170,6 +200,7 @@ def add_forwarding_red(**kwargs):
 
 @app.route('/post/routers/add', methods=['POST'])
 def add_router():
+    """Checks input values' validity, thus saving data or discarding them"""
     pr = [request.form.get('name'), request.form.get('ip')]
     flg = False
     try:
@@ -196,6 +227,7 @@ def add_router():
 
 @app.route('/post/forwarding/add', methods=['POST'])
 def add_forwarding():
+    """Checks input values' validity, thus saving data or discarding them"""
     pr = [request.form.get('ext_p'), request.form.get('ip'),
           request.form.get('int_p')]
     flg = False
@@ -225,30 +257,32 @@ def add_forwarding():
 
 
 def ssh_single(ip):
+    """Handles a delivery of forwarding rules to a specified host"""
     parser.read(filenames='settings.conf')
     path = parser.get(section="SSH", option="path")
-    outif = parser.get(section="SSH", option="output_if")
-    inif = parser.get(section="SSH", option="input_if")
+    output_if = parser.get(section="SSH", option="output_if")
+    input_if = parser.get(section="SSH", option="input_if")
     ssh_port = parser.getint(section="SSH", option="port")
     login = parser.get(section="SSH", option="login")
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     key = paramiko.RSAKey.from_private_key_file(parser.get(section="SSH", option="keyfile"))
     client.connect(hostname=ip, username=login, pkey=key, port=ssh_port, timeout=30)
-    fclient = client.open_sftp()
-    file = fclient.open(path, "w")
+    ftp_client = client.open_sftp()
+    file = ftp_client.open(path, "w")
     res = [{'ext_p': line[0], 'ip': line[1], 'p': line[2]} for line in g.database.get_forwardings()]
     file.writelines(render_template('iptables_template',
-                                    param=res, out_if=outif, in_if=inif, ext_ip=ip))
+                                    param=res, out_if=output_if, in_if=input_if, ext_ip=ip))
     file.flush()
     file.close()
-    fclient.close()
+    ftp_client.close()
     client.exec_command('iptables-restore < {path}'.format(path=path))
     client.close()
 
 
 @app.route('/get/ssh/send/<string:router>')
 def ssh_send(router):
+    """Handles a delivery of forwarding rules to the specified router"""
     try:
         rt, ip = g.database.get_router(router)
         ssh_single(ip)
@@ -262,6 +296,7 @@ def ssh_send(router):
 
 @app.route('/get/ssh/send_all')
 def ssh_send_all():
+    """Handles a delivery of forwarding rules to all routers"""
     res = g.database.get_routers()
     for src in res:
         try:
@@ -274,22 +309,20 @@ def ssh_send_all():
     return redirect(url_for('main'))
 
 
-@app.route('/post/router/delete', methods=['POST'])
+@app.route('/delete/router', methods=['DELETE'])
 def delete_router():
     router = request.form.get("router")
     s = g.database.delete_router(router)
-    logging.debug(s)
-    print(s)
+    logger.info(s)
     return s
 
 
-@app.route('/post/forwarding/delete', methods=['POST'])
+@app.route('/delete/forwarding', methods=['DELETE'])
 def delete_forwarding():
     port = request.form.get("ext_p")
     s = g.database.delete_forwarding(port)
-    logging.debug(s)
-    print(s)
+    logger.info(s)
     return s
 
 
-app.run(host='0.0.0.0')
+app.run(host='0.0.0.0', threaded=True)

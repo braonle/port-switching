@@ -26,7 +26,7 @@ function delete_rt(url, rt)
     var xhr = new XMLHttpRequest();
 
     var params = 'router=' + encodeURIComponent(rt);
-    xhr.open("POST", url, true);
+    xhr.open("DELETE", url, true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.send(params);
     xhr.onreadystatechange = function () {
@@ -43,7 +43,7 @@ function delete_sw(url, sw)
     var xhr = new XMLHttpRequest();
 
     var params = 'ext_p=' + encodeURIComponent(sw);
-    xhr.open("POST", url, true);
+    xhr.open("DELETE", url, true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.send(params);
     xhr.onreadystatechange = function () {
