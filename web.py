@@ -43,12 +43,7 @@ fm = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 h.setFormatter(fmt=fm)
 logger.addHandler(h)
 
-logger.info('start')
-
-# Made a separate procedure for easier adding new destinations
-# for logging
-def log(s):
-    logger.info(s)
+logger.info('Starting application')
 
 
 @app.before_request
@@ -119,20 +114,21 @@ def edit_router(name):
     except ValueError:
         net = None
     if name is None or res[1] is None or res[0] is None:
-        log('Smth bad has happened')
+        flash('Smth bad has happened')
         flg = True
     if len(res[2]) == 0:
-        log("Empty name")
+        flash("Empty name")
         flg = True
     if net is None:
-        log("Bad IP address")
+        flash("Bad IP address")
         flg = True
 
     if flg:
         return redirect_edit_router(res=res)
     else:
         r = g.database.edit_router(name, res[1], res[2])
-        log(r[1])
+        logger.info(r[1])
+        flash(r[1])
         if r[0]:
             return redirect_edit_router(res=res)
     return redirect(url_for('main'))
@@ -149,22 +145,23 @@ def edit_forwarding(port):
     except ValueError:
         net = None
     if res[0] is None or res[1] is None or res[2] is None:
-        log('Smth bad has happened')
+        flash('Smth bad has happened')
         flg = True
     if not res[0].isdigit() or not 1 <= int(res[0]) <= 65535:
-        log("Bad external port")
+        flash("Bad external port")
         flg = True
     if not res[2].isdigit() or not 1 <= int(res[2]) <= 65535:
-        log("Bad internal port")
+        flash("Bad internal port")
         flg = True
     if net is None:
-        log("Bad IP address")
+        flash("Bad IP address")
         flg = True
     if flg:
         return redirect_edit_forwarding(res=res)
     else:
         r = g.database.edit_forwarding(port, res[0], res[1], res[2])
-        log(r[1])
+        logger.info(r[1])
+        flash(r[1])
         if r[0]:
             return redirect_edit_forwarding(res=res)
     return redirect(url_for('main'))
@@ -208,19 +205,20 @@ def add_router():
     except ValueError:
         net = None
     if pr[0] is None or pr[1] is None:
-        log('Smth bad has happened')
+        flash('Smth bad has happened')
     if len(pr[0]) == 0:
-        log('No name supplied')
+        flash('No name supplied')
         flg = True
     if net is None:
-        log("Bad IP address")
+        flash("Bad IP address")
         flg = True
     if flg:
         return add_router_red(param=pr)
     else:
-        res = g.database.add_router(pr[0], pr[1])
-        log(res[1])
-        if res[0]:
+        r = g.database.add_router(pr[0], pr[1])
+        logger.info(r[1])
+        flash(r[1])
+        if r[0]:
             return add_router_red(param=pr)
     return redirect(url_for('main'))
 
@@ -236,22 +234,23 @@ def add_forwarding():
     except ValueError:
         net = None
     if pr[0] is None or pr[1] is None or pr[2] is None:
-        log('Smth bad has happened')
+        flash('Smth bad has happened')
     if not pr[0].isdigit() or not 1 <= int(pr[0]) <= 65535:
-        log("Bad external port")
+        flash("Bad external port")
         flg = True
     if net is None:
-        log("Bad IP address")
+        flash("Bad IP address")
         flg = True
     if not pr[2].isdigit() or not 1 <= int(pr[2]) <= 65535:
-        log("Bad internal port")
+        flash("Bad internal port")
         flg = True
     if flg:
         return add_forwarding_red(param=pr)
     else:
-        res = g.database.add_forwarding(pr[0], pr[1], pr[2])
-        log(res[1])
-        if res[0]:
+        r = g.database.add_forwarding(pr[0], pr[1], pr[2])
+        logger.info(r[1])
+        flash(r[1])
+        if r[0]:
             return add_forwarding_red(param=pr)
     return redirect(url_for('main'))
 
@@ -286,11 +285,12 @@ def ssh_send(router):
     try:
         rt, ip = g.database.get_router(router)
         ssh_single(ip)
-        log("Successful sending for {name}".format(name=router))
+        flash("Successful sending for {name}".format(name=router))
+        logger.info("Successful sending for {name}".format(name=router))
     except OSError as err:
-        log(str(err) + " for {name}".format(name=router))
+        flash(str(err) + " for {name}".format(name=router))
     except paramiko.AuthenticationException as err:
-        log(str(err) + " for {name}".format(name=router))
+        flash(str(err) + " for {name}".format(name=router))
     return redirect(url_for('main'))
 
 
@@ -301,11 +301,12 @@ def ssh_send_all():
     for src in res:
         try:
             ssh_single(src[1])
-            log("Successful sending for {name}".format(name=src[0]))
+            flash("Successful sending for {name}".format(name=src[0]))
+            logger.info("Successful sending for {name}".format(name=src[0]))
         except OSError as err:
-            log(str(err) + " for {name}".format(name=src[0]))
+            flash(str(err) + " for {name}".format(name=src[0]))
         except paramiko.AuthenticationException as err:
-            log(str(err) + " for {name}".format(name=src[0]))
+            flash(str(err) + " for {name}".format(name=src[0]))
     return redirect(url_for('main'))
 
 
@@ -326,3 +327,5 @@ def delete_forwarding():
 
 
 app.run(host='0.0.0.0', threaded=True)
+
+logger.info('Terminating application')
