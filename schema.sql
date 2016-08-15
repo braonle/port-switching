@@ -1,9 +1,11 @@
 CREATE TABLE routers (
-extern_ip TEXT PRIMARY KEY,
+id INTEGER PRIMARY KEY,
+extern_ip TEXT NOT NULL UNIQUE,
 name TEXT NOT NULL UNIQUE
 );
-CREATE TABLE switching (
-extern_port INTEGER PRIMARY KEY,
+CREATE TABLE forwarding (
+id INTEGER PRIMARY KEY,
+extern_port INTEGER NOT NULL UNIQUE,
 intern_ip TEXT NOT NULL,
 intern_port INTEGER NOT NULL,
 UNIQUE(intern_ip, intern_port)
